@@ -72,7 +72,7 @@ output = output.replace('LOW_ONE',str(lows[0])).replace('LOW_TWO',str(lows[1])).
 # Insert days of week
 one_day = datetime.timedelta(days=1)
 days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-output = output.replace('DAY_THREE',days_of_week[(day_one + 2*one_day).weekday()]).replace('DAY_FOUR',days_of_week[(day_one + 3*one_day).weekday()])
+output = output.replace('DAY_ONE',days_of_week[(day_one + 0*one_day).weekday()]).replace('DAY_TWO',days_of_week[(day_one + 1*one_day).weekday()]).replace('DAY_THREE',days_of_week[(day_one + 2*one_day).weekday()]).replace('DAY_FOUR',days_of_week[(day_one + 3*one_day).weekday()])
 
 # Write output
 codecs.open('weather-script-output.svg', 'w', encoding='utf-8').write(output)
