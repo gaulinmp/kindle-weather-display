@@ -48,6 +48,20 @@ for item in xml_temperatures:
         for i in range(len(values)):
             lows[i] = int(values[i].firstChild.nodeValue)
 
+# Parse Precipitation from probability-of-precipitation tag
+for item in dom.getElementsByTagName('probability-of-precipitation'):
+    precip = [int(val.firstChild.nodeValue)
+              for val in item.getElementsByTagName('value')]
+# precipitation is 12 hours, so take the MAX of every 2
+if len(precip) >= 7:
+    for i in range(4):
+        try:
+            precip[i] = max(precip[i*2], precip[i*2 + 1])
+        except:
+            precip[i] = precip[i*2]
+# Yes, I know sometimes the first 12 hours is the day before.
+# I don't really care. This is good enough for me.
+
 # Parse icons
 xml_icons = dom.getElementsByTagName('icon-link')
 icons = [None]*4
@@ -59,7 +73,6 @@ xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeVal
 day_one = parse(xml_day_one)
 full_day_one = dom.getElementsByTagName('creation-date')[0].firstChild.nodeValue
 
-print(full_day_one)
 
 #
 # Preprocess SVG
@@ -72,7 +85,8 @@ for i in range(4):  # 4 day forcast
     info_dict['high{}'.format(i)] = highs[i]
     info_dict['low{}'.format(i)] = lows[i]
     info_dict['icon{}'.format(i)] = icons[i]
-print(type((day_one + one_day)))
+    info_dict['rain{}'.format(i)] = "{}%".format(precip[i]) if precip[i]>0 else ''
+
 # Open SVG to process
 output = codecs.open('weather-script-preprocess.svg', 'r',  encoding='utf-8').read()
 
