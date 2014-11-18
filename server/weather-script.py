@@ -7,6 +7,8 @@
 from xml.dom import minidom
 import datetime
 import codecs
+from dateutil.parser import parse
+from dateutil.tz import tzlocal
 try:
     # Python 3
     from urllib.request import urlopen
@@ -18,8 +20,8 @@ except ImportError:
 # Geographic location
 #
 
-latitude = 29.7380133
-longitude = -95.4025701
+latitude = 29.74
+longitude = -95.40
 
 
 
@@ -28,7 +30,8 @@ longitude = -95.4025701
 #
 
 # Fetch data (change lat and lon to desired location)
-weather_xml = urlopen('http://graphical.weather.gov/xml/SOAP_server/ndfdSOAPclientByDay.php?whichClient=NDFDgenByDay&lat=' + str(latitude) + '&lon=' + str(longitude) + '&format=24+hourly&numDays=4&Unit=e').read()
+url_encoded = 'http://graphical.weather.gov/xml/SOAP_server/ndfdSOAPclientByDay.php?whichClient=NDFDgenByDay&lat={}&lon={}&format=24+hourly&numDays=4&Unit=e'.format(latitude, longitude)
+weather_xml = urlopen(url_encoded).read()
 dom = minidom.parseString(weather_xml)
 
 # Parse temperatures
@@ -54,25 +57,26 @@ for i in range(len(xml_icons)):
 # Parse dates
 xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeValue[0:10]
 day_one = datetime.datetime.strptime(xml_day_one, '%Y-%m-%d')
+full_day_one = dom.getElementsByTagName('creation-date')[0].firstChild.nodeValue
 
-
+print(full_day_one)
 
 #
 # Preprocess SVG
 #
+one_day = datetime.timedelta(days=1)
+
+info_dict = {'date' : parse(full_day_one).astimezone(tzlocal())}
+for i in range(4):  # 4 day forcast
+    info_dict['day{}'.format(i)] = (day_one + i*one_day).strftime("%A")
+    info_dict['high{}'.format(i)] = highs[i]
+    info_dict['low{}'.format(i)] = lows[i]
+    info_dict['icon{}'.format(i)] = icons[i]
 
 # Open SVG to process
-output = codecs.open('weather-script-preprocess.svg', 'r', encoding='utf-8').read()
+output = codecs.open('weather-script-preprocess.svg', 'r',  encoding='utf-8').read()
 
-# Insert icons and temperatures
-output = output.replace('ICON_ONE',icons[0]).replace('ICON_TWO',icons[1]).replace('ICON_THREE',icons[2]).replace('ICON_FOUR',icons[3])
-output = output.replace('HIGH_ONE',str(highs[0])).replace('HIGH_TWO',str(highs[1])).replace('HIGH_THREE',str(highs[2])).replace('HIGH_FOUR',str(highs[3]))
-output = output.replace('LOW_ONE',str(lows[0])).replace('LOW_TWO',str(lows[1])).replace('LOW_THREE',str(lows[2])).replace('LOW_FOUR',str(lows[3]))
-
-# Insert days of week
-one_day = datetime.timedelta(days=1)
-days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-output = output.replace('DAY_ONE',days_of_week[(day_one + 0*one_day).weekday()]).replace('DAY_TWO',days_of_week[(day_one + 1*one_day).weekday()]).replace('DAY_THREE',days_of_week[(day_one + 2*one_day).weekday()]).replace('DAY_FOUR',days_of_week[(day_one + 3*one_day).weekday()])
-
+output = output
 # Write output
-codecs.open('weather-script-output.svg', 'w', encoding='utf-8').write(output)
+codecs.open('weather-script-output.svg', 'w',
+             encoding='utf-8').write(output.format(**info_dict))
