@@ -55,8 +55,8 @@ for i in range(len(xml_icons)):
     icons[i] = xml_icons[i].firstChild.nodeValue.split('/')[-1].split('.')[0].rstrip('0123456789')
 
 # Parse dates
-xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeValue[0:10]
-day_one = datetime.datetime.strptime(xml_day_one, '%Y-%m-%d')
+xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeValue
+day_one = parse(xml_day_one)
 full_day_one = dom.getElementsByTagName('creation-date')[0].firstChild.nodeValue
 
 print(full_day_one)
@@ -68,11 +68,11 @@ one_day = datetime.timedelta(days=1)
 
 info_dict = {'date' : parse(full_day_one).astimezone(tzlocal())}
 for i in range(4):  # 4 day forcast
-    info_dict['day{}'.format(i)] = (day_one + i*one_day).strftime("%A")
+    info_dict['day{}'.format(i)] = (day_one + i*one_day)
     info_dict['high{}'.format(i)] = highs[i]
     info_dict['low{}'.format(i)] = lows[i]
     info_dict['icon{}'.format(i)] = icons[i]
-
+print(type((day_one + one_day)))
 # Open SVG to process
 output = codecs.open('weather-script-preprocess.svg', 'r',  encoding='utf-8').read()
 
