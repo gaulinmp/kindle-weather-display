@@ -23,6 +23,7 @@ But that just didn't work for me. Turns out, instead of ~ (tilde), I had to use 
 ;debugOff
 ```
 After figuring that out, everything worked as advertised. 
+I put the jailbreak files in the [jailbreak folder](https://github.com/gaulinmp/kindle-weather-display/tree/master/jailbreak) just in case mobileread forums go down and the files get lost.
 
 ## Changes
 
