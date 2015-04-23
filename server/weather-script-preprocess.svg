@@ -28,7 +28,7 @@
 <path id="divider" d="m 10,-10 80,-80 -3,-3 -80,80 3,3 z"/>
 </defs>
 
-<g transform="scale(3.25) translate(5 20)">
+<g transform="scale(3.25) translate(5 0)">
 <use xlink:href="#{icon0}"/>
 </g>
 
@@ -46,22 +46,23 @@
 <text style="text-anchor:start;"  font-size="35px" y=" 50" x=" 25">{day0:%A}:</text>
 <text style="text-anchor:end;"    font-size="28px" y=" 50" x="575">{date:%Y/%m/%d %H:%M}</text>
 <text style="text-anchor:start;"  font-size="35px" y="100" x="400">High:</text>
-<text style="text-anchor:end;"    font-size="99px" y="185" x="550">{high0}°</text>
+<text style="text-anchor:end;"    font-size="99px" y="185" x="550">{high0:3.0f}°</text>
 <text style="text-anchor:start;"  font-size="35px" y="225" x="400">Low:</text>
-<text style="text-anchor:end;"    font-size="99px" y="310" x="550">{low0}°</text>
-<text style="text-anchor:start;"  font-size="72px" y="400" x="400">{rain0}</text>
+<text style="text-anchor:end;"    font-size="99px" y="310" x="550">{low0:2.0f}°</text>
+<text style="text-anchor:start;"  font-size="72px" y="400" x="425">{rain0}</text>
+<text style="text-anchor:start;font-weight: bold;" font-size="120px" y="400" x="150">{temp:.0f}°</text>
 
 
 <text style="text-anchor:start;" font-size="32px" y="466" x=" 40">{day1:%a}:</text>
 <text style="text-anchor:start;" font-size="32px" y="466" x="240">{day2:%a}:</text>
 <text style="text-anchor:start;" font-size="32px" y="466" x="440">{day3:%a}:</text>
 
-<text style="text-anchor:end;"   font-size="58px" y="665" x="120">{high1}°</text>
-<text style="text-anchor:end;"   font-size="58px" y="665" x="320">{high2}°</text>
-<text style="text-anchor:end;"   font-size="58px" y="665" x="520">{high3}°</text>
-<text style="text-anchor:start;" font-size="58px" y="720" x="100">{low1}°</text>
-<text style="text-anchor:start;" font-size="58px" y="720" x="300">{low2}°</text>
-<text style="text-anchor:start;" font-size="58px" y="720" x="500">{low3}°</text>
+<text style="text-anchor:end;"   font-size="58px" y="665" x="120">{high1:3.0f}°</text>
+<text style="text-anchor:end;"   font-size="58px" y="665" x="320">{high2:3.0f}°</text>
+<text style="text-anchor:end;"   font-size="58px" y="665" x="520">{high3:3.0f}°</text>
+<text style="text-anchor:start;" font-size="58px" y="720" x="100">{low1:2.0f}°</text>
+<text style="text-anchor:start;" font-size="58px" y="720" x="300">{low2:2.0f}°</text>
+<text style="text-anchor:start;" font-size="58px" y="720" x="500">{low3:2.0f}°</text>
 
 
 <text style="text-anchor:middle;" font-size="38px" y="780" x="100">{rain1}</text>
