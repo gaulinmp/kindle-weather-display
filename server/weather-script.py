@@ -1,12 +1,13 @@
-#!/usr/bin/python2
 
-# Kindle Weather Display
-# Matthew Petroff (http://mpetroff.net/)
-# September 2012
+# coding: utf-8
 
-from xml.dom import minidom
-import datetime
+# In[6]:
+
+import re
+import os
+import json
 import codecs
+import datetime as dt
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 try:
@@ -16,81 +17,87 @@ except ImportError:
     # Python 2
     from urllib2 import urlopen
 
-#
-# Geographic location
-#
 
-latitude = 29.74
-longitude = -95.40
-
-
+# In[2]:
 
 #
-# Download and parse weather data
+# Geographic location: Houston
 #
+latitude = 29.76
+longitude = -95.37
 
-# Fetch data (change lat and lon to desired location)
-url_encoded = 'http://graphical.weather.gov/xml/SOAP_server/ndfdSOAPclientByDay.php?whichClient=NDFDgenByDay&lat={}&lon={}&format=24+hourly&numDays=4&Unit=e'.format(latitude, longitude)
-weather_xml = urlopen(url_encoded).read()
-dom = minidom.parseString(weather_xml)
+one_day = dt.timedelta(days=1)
 
-# Parse temperatures
-xml_temperatures = dom.getElementsByTagName('temperature')
-highs = [None]*4
-lows = [None]*4
-for item in xml_temperatures:
-    if item.getAttribute('type') == 'maximum':
-        values = item.getElementsByTagName('value')
-        for i in range(len(values)):
-            highs[i] = int(values[i].firstChild.nodeValue)
-    if item.getAttribute('type') == 'minimum':
-        values = item.getElementsByTagName('value')
-        for i in range(len(values)):
-            lows[i] = int(values[i].firstChild.nodeValue)
 
-# Parse Precipitation from probability-of-precipitation tag
-for item in dom.getElementsByTagName('probability-of-precipitation'):
-    precip = [int(val.firstChild.nodeValue)
-              for val in item.getElementsByTagName('value')]
-# precipitation is 12 hours, so take the MAX of every 2
-if len(precip) >= 7:
-    for i in range(4):
-        try:
-            precip[i] = max(precip[i*2], precip[i*2 + 1])
-        except:
-            precip[i] = precip[i*2]
-# Yes, I know sometimes the first 12 hours is the day before.
-# I don't really care. This is good enough for me.
+# In[3]:
 
-# Parse icons
-xml_icons = dom.getElementsByTagName('icon-link')
-icons = [None]*4
-for i in range(len(xml_icons)):
-    icons[i] = xml_icons[i].firstChild.nodeValue.split('/')[-1].split('.')[0].rstrip('0123456789')
+def get_icon_lookup_dict(filename = None):
+    """
+    Reads the ID tags from an SVG, and returns a dictionary in the form:
+    {'forecast.io name': 'svg ID value'}
+    """
+    if not filename:
+        filename = 'weather-script-preprocess.svg'
+    with open(filename) as fh:
+        txt = fh.read()
+        icon_dict = {x:[x] for x in re.findall(r'(?<=id=")[^"]*(?=")', txt) if x not in ('divider')}
+    # Icon names from forecast.io: 
+    # clear-day, clear-night, rain, snow, sleet, wind, 
+    # fog, cloudy, partly-cloudy-day, partly-cloudy-night
+    icon_dict['sun'].extend(['clear-day','clear-night'])
+    icon_dict['overcast'].extend(['cloudy'])
+    icon_dict['clouds-medium'].extend(['partly-cloudy-day','partly-cloudy-night'])
+    icon_dict['rain-freezing'].extend(['sleet'])
 
-# Parse dates
-xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeValue
-day_one = parse(xml_day_one)
-full_day_one = dom.getElementsByTagName('creation-date')[0].firstChild.nodeValue
+    return {v:k for k,vs in icon_dict.items() for v in vs }
 
+
+# In[4]:
+
+#
+# Download and parse weather data. Must have API key at ~/.forecastio.key
+#
+try:
+    API_KEY = str(open(os.path.expanduser('~/.forecastio.key')).read().strip())
+except FileNotFoundError:
+    print("No API key existed")
+    exit()
+url_raw = "https://api.forecast.io/forecast/{key}/{lat},{lon}?exclude=hourly,alerts,flags"
+# Todays weather
+url_weather = url_raw.format(key=API_KEY, lat=latitude, lon=longitude)
+weather_data = urlopen(url_weather).read().decode("utf-8")
+weather_json = json.loads(weather_data)
+#weather_json.keys()
+
+
+# In[7]:
+
+# Assemble first day data (0 day)
+icon_dict = get_icon_lookup_dict()
+
+
+# In[8]:
 
 #
 # Preprocess SVG
 #
-one_day = datetime.timedelta(days=1)
+info_dict = {'date' : dt.datetime.now()}
 
-info_dict = {'date' : parse(full_day_one).astimezone(tzlocal())}
-for i in range(4):  # 4 day forcast
-    info_dict['day{}'.format(i)] = (day_one + i*one_day)
-    info_dict['high{}'.format(i)] = highs[i]
-    info_dict['low{}'.format(i)] = lows[i]
-    info_dict['icon{}'.format(i)] = icons[i]
-    info_dict['rain{}'.format(i)] = "{}%".format(precip[i]) if precip[i]>0 else ''
+# Add data: date, day#, icon#, rain#, high#, low#
+for i in range(0,4):  # 4 day forcast
+    info_dict['day{}'.format(i)] = info_dict['date'] + i*one_day
+    info_dict['high{}'.format(i)] = weather_json['daily']['data'][i]['apparentTemperatureMax']
+    info_dict['low{}'.format(i)] = weather_json['daily']['data'][i]['apparentTemperatureMin']
+    info_dict['icon{}'.format(i)] = icon_dict.get(weather_json['daily']['data'][i]['icon'], 'sun')
+    info_dict['rain{}'.format(i)] = ("{:2d}%".format(int(weather_json['daily']['data'][i]['precipProbability']*100)) 
+                                     if weather_json['daily']['data'][i]['precipProbability']>0 else '')
+
+info_dict['temp'] = weather_json['currently']['apparentTemperature']
 
 # Open SVG to process
 output = codecs.open('weather-script-preprocess.svg', 'r',  encoding='utf-8').read()
 
-output = output
 # Write output
 codecs.open('weather-script-output.svg', 'w',
              encoding='utf-8').write(output.format(**info_dict))
+
