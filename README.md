@@ -5,6 +5,7 @@ Original from mpetroff/kindle-weather-display
 ## How to do
 
 Basically, I followed [this blog post](http://www.turnkeylinux.org/blog/kindle-root). Everything more or less worked as advertised. 
+To connect to the kindle, once it's running USBNethack, the command is `sudo ifconfig usb0 192.168.2.1`.
 
 The only annoying part was after getting the USBNethack files on the Kindle, trying to make it show up under ifconfig on the rpi. The blog post (and much of the internet) says:
 ```
